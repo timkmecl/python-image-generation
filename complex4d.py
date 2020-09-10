@@ -15,18 +15,21 @@ gPerU = 2
 # Resolution
 res = 1080
 
-pPerLine = 200
-steps = 50
+pPerLine = 500
+steps = 20
 
 # Zoom/focus
 f = 12
 m = 0.002
-zoom = 2
+zoom = 2.2
 
 # Camera
 pos = np.array((6, 7, 5))
 direc = np.array((0, 0, 0))
 top = np.array((0, 0.0001, -1))
+
+# Function
+function = np.tan
 
 
 
@@ -38,20 +41,25 @@ def normed(v):
 def projection(v, pos, dirV, topU, leftU, f, m, l):
     point = v - pos
 
-    d = np.linalg.norm(point)
+    d = np.linalg.norm(point, axis=1)[:,np.newaxis]
     pointU = point/d
 
     psi = np.arccos(pointU.dot(dirV))
-    if psi < math.pi/2:
-        v = np.array((pointU.dot(topU), pointU.dot(leftU)))
 
-        if((np.abs(v) < 1).all()):
-            for i in range(1):
-                r = (random.uniform(0, 1) ** 2) * (m * (abs(f - d)) ** math.e) / d
-                fi = random.uniform(0, math.tau)
-                vRand = r * np.array((np.cos(fi), np.sin(fi)))
-                #vRand = r * np.array(np.cos(fi), np.sin(fi))
-                l.append(v + vRand)
+    x = psi < math.pi/2
+    d1 = d[x]
+    pointU1 = pointU[x]
+
+    v = np.stack((pointU1.dot(topU), pointU1.dot(leftU)), axis=0)
+
+    x = (np.abs(v[0]) < 1) & (np.abs(v[1]) < 1)
+    d1 = d1[x]
+    v1 = v.T[x]
+
+    r = (np.random.rand(*d1.shape) ** 2) * (m * (np.abs(f - d1)) ** math.e) / d1
+    fi = np.random.rand(d1.shape[0]) * math.tau
+    vRand = r * np.stack((np.cos(fi), np.sin(fi)), axis=1)
+    l.extend(list(v1 + vRand))
 
 
 
@@ -67,20 +75,15 @@ density = np.zeros((res, res), dtype=np.float32)
 print(bf)
 
 
-
-def function(z):
-    return np.tan(z)
-
-
 def vis():
     global density
     count = 0
     print("vis")
     for z in l2:
-        if abs(z[0]) > size or abs(z[1]) > size:
+        if np.linalg.norm(z) > size:
             continue
 
-        n = (res*(z[0] + size)/(2*size), res*(z[1] + size)/(2*size))
+        n = res * (z + size) / (2*size)
 
         if n[0] >= res-1 or n[1] >= res-1:
             continue
@@ -124,8 +127,7 @@ for i in tqdm(range(steps)):
 
         pts = np.stack((np.real(zz), np.imag(zz), im), axis=1)
 
-        for pt in pts:
-            projection(pt, pos, dirV, topU, leftU, f, m, l)
+        projection(pts, pos, dirV, topU, leftU, f, m, l)
 
     for j in range(gReal[0]*gPerU, gReal[1]*gPerU + 1):
         re = np.full_like(re, j / gPerU)
@@ -135,9 +137,8 @@ for i in tqdm(range(steps)):
 
         pts = np.stack((np.real(zz), np.imag(zz), im), axis=1)
 
-        for pt in pts:
-            projection(pt, pos, dirV, topU, leftU, f, m, l)
-
+        projection(pts, pos, dirV, topU, leftU, f, m, l)
+    
     l2 = np.array(l)
     '''
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
