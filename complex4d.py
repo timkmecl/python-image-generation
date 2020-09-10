@@ -62,19 +62,6 @@ def projection(v, pos, dirV, topU, leftU, f, m, l):
     l.extend(list(v1 + vRand))
 
 
-
-dirV = normed(direc - pos)
-topU = normed(top - top.dot(dirV) * dirV)
-leftU = normed(np.cross(dirV, topU))
-size = 1 / zoom
-
-l = []
-
-bf = ((steps * pPerLine) / 1000) / ((res) / 500)
-density = np.zeros((res, res), dtype=np.float32)
-print(bf)
-
-
 def vis():
     global density
     count = 0
@@ -114,6 +101,21 @@ def vis():
     plt.title(f'{100*progress}%')
     plt.draw()
     plt.pause(0.05)
+
+
+
+
+dirV = normed(direc - pos)
+topU = normed(top - top.dot(dirV) * dirV)
+leftU = normed(np.cross(dirV, topU))
+size = 1 / zoom
+
+l = []
+
+bf = ((steps * pPerLine) / 1000) / ((res) / 500)
+density = np.zeros((res, res), dtype=np.float32)
+print(bf)
+
 
 
 # plt.ion()
