@@ -6,6 +6,8 @@ import random
 from tqdm import tqdm
 import os
 
+np.random.seed(256)
+
 
 ''' Parameters '''
 
@@ -13,8 +15,6 @@ import os
 view = np.array([[-2, 1], [-1.5, 1.5]])
 
 # Iterated function
-
-
 def function(z, c):
     return z**2 + c
 
@@ -30,8 +30,6 @@ its = 5_000
 ''' Code '''
 
 # Generates inital points for trajectories
-
-
 def inital_points(pts, view):
     z1 = np.random.rand(pts, 2) * (view[:, 1] - view[:, 0]) + view[:, 0]
     z1 = z1[:, 0] + 1j*z1[:, 1]
@@ -66,10 +64,10 @@ def calculate_trajectories(z0, z1, func, pts, its, remove_cardioid=False):
 
 
 # Generates a list of coordinates from previous function's output
-def change_data_shape(l1, ind):
+def change_data_shape(l1, ind, start=2):
     l = []
     ll = []
-    for a in tqdm(l1[1:]):
+    for a in tqdm(l1[start:]):
         x = np.logical_not(np.isin(a[1], ind))
         b = a[0][x]
         #l2 = np.stack((a[0][x].real, a[0][x].imag, np.full(a[0][x].shape, a[2]))).T
@@ -110,15 +108,15 @@ def draw(density, density2, divide_by=1, show_2=True, vmax=1, show=True, save=Fa
 
 def main():
     z1 = inital_points(pts, view)
-    r = 30
-    for i in range(r):
+    r = 300
+    for i in range(179, r):
         print(i)
-        phi = (math.pi * i/r) / 10
-        z0 = (math.cos(phi) + 1j * math.sin(phi)) * 1
+        phi = (math.tau * i/r)
+        z0 = (math.cos(phi) + 1j * math.sin(phi)) * 0.5 + 0.5
         l = change_data_shape(*calculate_trajectories(z0, z1, function, pts, its))
         hist = to_histogram(1080, l)
-        draw(*hist, 35, show=False, show_2=False, save=True, filename=f'an2/a{i}.png')
-        draw(*hist, 7000, show=False, save=True, filename=f'an1/it{i}.png')
+        draw(*hist, 50, show=False, show_2=False, save=True, filename=f'an3/a{i}.png')
+        draw(*hist, 13_000, show=False, save=True, filename=f'an3/it{i}.png')
 
 
 if __name__ == '__main__':
